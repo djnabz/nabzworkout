@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+            padding-bottom: 100px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .day-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .day-btn {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: 2px solid #333;
+            background: #1a1a1a;
+            color: #888;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .day-btn.active {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            color: #000;
+            border-color: #00ff88;
+        }
+
+        .exercise {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .exercise-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00ff88;
+            margin-bottom: 16px;
+        }
+
+        .last-session {
+            background: #0d1117;
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            color: #a8b3c1;
+            border-left: 4px solid #00ff88;
+            line-height: 1.6;
+        }
+
+        .last-session-title {
+            font-weight: 700;
+            color: #00ff88;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .set-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .set-label {
+            font-weight: 600;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .set-label.high-point {
+            color: #ff6b6b;
+        }
+
+        .set-label.backoff {
+            color: #ffa500;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="number"] {
+            padding: 14px;
+            font-size: 16px;
+            border: 2px solid #333;
+            background: #0d1117;
+            color: #e0e0e0;
+            border-radius: 10px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #00ff88;
+            background: #161b22;
+        }
+
+        .finish-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .finish-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #00ff88;
+            color: #000;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.5);
+            z-index: 1000;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .splash-screen.hidden {
+            display: none;
+        }
+
+        .splash-title {
+            font-size: 48px;
+            font-weight: 900;
+            text-align: center;
+            line-height: 1.2;
+            margin-bottom: 60px;
+            background: linear-gradient(135deg, #00ff88 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hell-yea-btn {
+            padding: 24px 60px;
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 12px 40px rgba(255, 107, 107, 0.5);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .hell-yea-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .add-exercise-btn {
+            width: 100%;
+            padding: 18px;
+            margin-bottom: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            background: #1a1a1a;
+            color: #00ff88;
+            border: 2px dashed #00ff88;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-exercise-btn:active {
+            transform: scale(0.98);
+            background: #222;
+        }
+
+        .completion-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .completion-screen.show {
+            display: flex;
+        }
+
+        .completion-title {
+            font-size: 56px;
+            font-weight: 900;
+            text-align: center;
+            line-height: 1.2;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .completion-message {
+            font-size: 32px;
+            font-weight: 700;
+            color: #e0e0e0;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            border: 2px solid #00ff88;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            border: 2px solid #333;
+            background: #0d1117;
+            color: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            color: #000;
+        }
+
+        .modal-btn-secondary {
+            background: #333;
+            color: #e0e0e0;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.98);
+        }
+
+        .delete-exercise-btn {
+            padding: 8px 12px;
+            font-size: 12px;
+            background: #ff4757;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-title">Are You Ready<br>To Kick Ass?</div>
+        <button class="hell-yea-btn" onclick="startWorkout()">HELL YEA</button>
+    </div>
+
+    <div class="completion-screen" id="completionScreen">
+        <div class="completion-title">WELL DONE!</div>
+        <div class="completion-message">Now Have A<br>Kick Ass Day 💪</div>
+    </div>
+
+    <div class="modal" id="addExerciseModal">
+        <div class="modal-content">
+            <div class="modal-title">Add Custom Exercise</div>
+            <input type="text" id="customExerciseName" class="modal-input" placeholder="Exercise Name">
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="addCustomExercise()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    
+    <div class="container">
+        <h1>💪 Workout Tracker</h1>
+        
+        <div class="day-selector">
+            <button class="day-btn active" onclick="switchDay('day1')">Day 1</button>
+            <button class="day-btn" onclick="switchDay('day2')">Day 2</button>
+        </div>
+
+        <div id="workout-container"></div>
+
+        <button class="finish-btn" onclick="finishWorkout()">Finish Workout & Save</button>
+    </div>
+
+    <script>
+        const workoutData = {
+            day1: [
+                'Leg Press',
+                'Leg Extensions',
+                'Leg Curls',
+                'Machine Pull Down',
+                'Dumbbell One-Arm Row',
+                'Seated Calf Raises'
+            ],
+            day2: [
+                'Incline Bench Press',
+                'Flat Dumbbell Press',
+                'Dumbbell Lateral Raise',
+                'Barbell Upright Row',
+                'Dumbbell Shrugs',
+                'Tricep Pushdown',
+                'Standing Bicep Curls'
+            ]
+        };
+
+        let currentDay = 'day1';
+
+        function startWorkout() {
+            document.getElementById('splashScreen').classList.add('hidden');
+        }
+
+        function switchDay(day) {
+            currentDay = day;
+            
+            // Update button styles
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderWorkout();
+        }
+
+        function renderWorkout() {
+            const container = document.getElementById('workout-container');
+            const exercises = workoutData[currentDay];
+            const lastSession = getLastSession(currentDay);
+            
+            container.innerHTML = exercises.map((exercise, exerciseIdx) => {
+                const exerciseKey = exercise.replace(/\s+/g, '_').toLowerCase();
+                const lastExerciseData = lastSession ? lastSession[exerciseKey] : null;
+                const isCustom = exercise.startsWith('CUSTOM:');
+                const displayName = isCustom ? exercise.replace('CUSTOM:', '') : exercise;
+                
+                return `
+                    <div class="exercise">
+                        <div class="exercise-name">
+                            ${displayName}
+                            ${isCustom ? `<button class="delete-exercise-btn" onclick="deleteExercise('${currentDay}', ${exerciseIdx})">Delete</button>` : ''}
+                        </div>
+                        
+                        <div class="last-session">
+                            <div class="last-session-title">📊 Last Workout Session:</div>
+                            ${lastExerciseData ? 
+                                lastExerciseData.map((set, idx) => 
+                                    set.weight && set.reps ? 
+                                    `Set ${idx + 1}: ${set.weight}kg × ${set.reps} reps` : 
+                                    `Set ${idx + 1}: Not recorded`
+                                ).join(' • ')
+                                : 
+                                '<span style="color: #666;">No previous session data yet</span>'
+                            }
+                        </div>
+                        
+                        ${[1, 2, 3, 4].map(setNum => {
+                            let setLabel = `Set ${setNum}`;
+                            let labelClass = 'set-label';
+                            let hint = '';
+                            
+                            if (setNum === 1 || setNum === 2) {
+                                hint = 'Build up';
+                            } else if (setNum === 3) {
+                                setLabel = `Set ${setNum} 🔥`;
+                                labelClass = 'set-label high-point';
+                                hint = 'High Point (Heaviest)';
+                            } else if (setNum === 4) {
+                                setLabel = `Set ${setNum} ⚡`;
+                                labelClass = 'set-label backoff';
+                                hint = 'Back-off (-1kg from Set 3)';
+                            }
+                            
+                            return `
+                                <div class="set-row">
+                                    <div class="${labelClass}">${setLabel}</div>
+                                    <div class="input-group">
+                                        <label class="input-label">Weight (kg)</label>
+                                        <input type="number" 
+                                               id="${currentDay}_${exerciseKey}_set${setNum}_weight" 
+                                               placeholder="0"
+                                               step="0.5"
+                                               min="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="input-label">Reps</label>
+                                        <input type="number" 
+                                               id="${currentDay}_${exerciseKey}_set${setNum}_reps" 
+                                               placeholder="0"
+                                               min="0"
+                                               max="50">
+                                    </div>
+                                </div>
+                                ${hint ? `<div class="hint">${hint}</div>` : ''}
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }).join('');
+            
+            // Add the "Add Exercise" button at the end
+            container.innerHTML += `
+                <button class="add-exercise-btn" onclick="openAddExerciseModal()">
+                    + Add Custom Exercise
+                </button>
+            `;
+            
+            // Load current session data if it exists
+            loadCurrentSession();
+        }
+
+        function loadCurrentSession() {
+            const currentSession = JSON.parse(localStorage.getItem(`current_${currentDay}`) || '{}');
+            
+            Object.keys(currentSession).forEach(exerciseKey => {
+                currentSession[exerciseKey].forEach((set, idx) => {
+                    const weightInput = document.getElementById(`${currentDay}_${exerciseKey}_set${idx + 1}_weight`);
+                    const repsInput = document.getElementById(`${currentDay}_${exerciseKey}_set${idx + 1}_reps`);
+                    
+                    if (weightInput && set.weight) weightInput.value = set.weight;
+                    if (repsInput && set.reps) repsInput.value = set.reps;
+                });
+            });
+        }
+
+        function saveCurrentSession() {
+            const exercises = workoutData[currentDay];
+            const sessionData = {};
+            
+            exercises.forEach(exercise => {
+                const exerciseKey = exercise.replace(/\s+/g, '_').toLowerCase();
+                const sets = [];
+                
+                for (let i = 1; i <= 4; i++) {
+                    const weight = document.getElementById(`${currentDay}_${exerciseKey}_set${i}_weight`)?.value || '';
+                    const reps = document.getElementById(`${currentDay}_${exerciseKey}_set${i}_reps`)?.value || '';
+                    
+                    sets.push({
+                        weight: weight,
+                        reps: reps
+                    });
+                }
+                
+                sessionData[exerciseKey] = sets;
+            });
+            
+            localStorage.setItem(`current_${currentDay}`, JSON.stringify(sessionData));
+        }
+
+        function finishWorkout() {
+            saveCurrentSession();
+            
+            // Move current session to last session
+            const currentSession = localStorage.getItem(`current_${currentDay}`);
+            if (currentSession) {
+                localStorage.setItem(`last_${currentDay}`, currentSession);
+                localStorage.removeItem(`current_${currentDay}`);
+            }
+            
+            // Show completion screen
+            document.getElementById('completionScreen').classList.add('show');
+            
+            // Hide completion screen after 3 seconds and re-render
+            setTimeout(() => {
+                document.getElementById('completionScreen').classList.remove('show');
+                renderWorkout();
+            }, 3000);
+        }
+
+        function getLastSession(day) {
+            const lastSession = localStorage.getItem(`last_${day}`);
+            return lastSession ? JSON.parse(lastSession) : null;
+        }
+
+        function openAddExerciseModal() {
+            document.getElementById('addExerciseModal').classList.add('show');
+            document.getElementById('customExerciseName').value = '';
+        }
+
+        function closeModal() {
+            document.getElementById('addExerciseModal').classList.remove('show');
+        }
+
+        function addCustomExercise() {
+            const exerciseName = document.getElementById('customExerciseName').value.trim();
+            
+            if (!exerciseName) {
+                alert('Please enter an exercise name');
+                return;
+            }
+            
+            // Add CUSTOM: prefix to identify custom exercises
+            workoutData[currentDay].push(`CUSTOM:${exerciseName}`);
+            
+            // Save to localStorage
+            localStorage.setItem('workoutData', JSON.stringify(workoutData));
+            
+            closeModal();
+            renderWorkout();
+            showNotification(`✅ Added "${exerciseName}" to ${currentDay === 'day1' ? 'Day 1' : 'Day 2'}`);
+        }
+
+        function deleteExercise(day, exerciseIdx) {
+            if (confirm('Are you sure you want to delete this exercise?')) {
+                workoutData[day].splice(exerciseIdx, 1);
+                localStorage.setItem('workoutData', JSON.stringify(workoutData));
+                renderWorkout();
+                showNotification('Exercise deleted');
+            }
+        }
+
+        function loadCustomExercises() {
+            const savedData = localStorage.getItem('workoutData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                workoutData.day1 = parsedData.day1 || workoutData.day1;
+                workoutData.day2 = parsedData.day2 || workoutData.day2;
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Auto-save every 30 seconds
+        setInterval(() => {
+            saveCurrentSession();
+        }, 30000);
+
+        // Save on page unload
+        window.addEventListener('beforeunload', () => {
+            saveCurrentSession();
+        });
+
+        // Load custom exercises first
+        loadCustomExercises();
+        
+        // Initial render
+        renderWorkout();
+    </script>
+</body>
+</html>
